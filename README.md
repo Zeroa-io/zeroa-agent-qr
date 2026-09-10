@@ -1,6 +1,6 @@
 # Zeroa agent QR generator
 
-A single static page. An agent pastes their Zeroa referral link and gets a QR card that opens
+A single static page. A Zeroa agent pastes their referral link and gets a QR card that opens
 WhatsApp to the Zeroa business number with the message already written.
 
 Live page: https://booysenmarkus.github.io/zeroa-agent-qr/
@@ -9,38 +9,33 @@ Live page: https://booysenmarkus.github.io/zeroa-agent-qr/
 
     https://wa.me/447860015362?text=<url encoded>Zeroa signup please. <the agent's referral link>
 
-`Zeroa_WhatsApp_Sales_Inbox` in Zoho CRM reads the referral code out of that message, creates or
-matches the Lead, replies on WhatsApp and runs the enrichment sequence. The whole referral link
-rides in the message and is echoed back to the prospect verbatim.
+The whole referral link rides inside the message, so the referral code travels with every scan.
 
 ## The parser mirror
 
-`readRef()` and `readLink()` in the page are a line by line mirror of section 4 of that Deluge
-function, so the page can tell an agent the code the CRM will actually read **before** they print
-anything. It refuses to draw a QR when no code can be read, and warns when the code was found by
-position instead of after `ref=`.
+`readRef()` and `readLink()` in the page reproduce, line by line, how the referral code is read
+back out of that message on the receiving side. That is what lets the page show an agent the code
+that will actually be recorded **before** they print anything. It refuses to draw a QR when no code
+can be read, and warns when the code was found by position instead of after `ref=`.
 
-**If the Deluge function's parser changes, change these with it.** They are checked against a
-Python transcription of the Deluge over 109 link shapes plus every live referral code in the CRM.
+**If the receiving parser changes, change these two functions with it.** They are checked against a
+separate transcription of it over 109 link shapes plus every referral code currently in use.
 
 ## Building
 
 `index.html` is generated. Do not hand edit it.
 
-Source and build script live in the project working folder, not in this repo:
+The template and the build script live in the Zeroa working folder, not in this repo. Edit the
+template, run the build script, then commit and push from here. GitHub Pages redeploys on push
+to `main`.
 
-    claude knowledge base docs\WhatsApp QR Lead Capture\_app_template.html
-    claude knowledge base docs\WhatsApp QR Lead Capture\_build_app.py
-
-Edit the template, run `python _build_app.py`, then commit and push from this folder. GitHub Pages
-redeploys on push to `main`.
-
-The build fails on a leftover placeholder, an em or en dash, any non ascii in our own text, a
-control byte, a `font:` shorthand with `inherit` in the family slot, a text input under 16px, a
-surviving reference to the deleted number field or the old SMS mode, and Ken's live agent code.
+The build refuses to produce a file that has a leftover placeholder, an em or en dash, any non
+ascii character in our own text, a control byte, a `font:` shorthand with `inherit` in the family
+slot, a text input under 16px, or a surviving reference to any of the fields removed from the old
+version.
 
 ## Notes
 
-- One file, no build step in the browser, no external requests at runtime.
+- One file. No build step in the browser and no external requests at runtime, so it works offline.
 - The qrcode library is inlined. The Zeroa wordmark is drawn from vector outlines, not an image.
 - Nothing an agent types leaves their device. It is kept in `localStorage` under `zeroa-qr-v2`.
