@@ -198,10 +198,13 @@
   var TARGET  = '447860015362';
   var TARGET_PRETTY = '+44 7860 015362';
 
-  // The sentence the bot recognises. Zeroa_WhatsApp_Sales_Inbox reads the
-  // referral link straight out of this message and echoes it back to the
-  // prospect, so the whole link rides along and any link shape works.
-  var PREFIX  = 'Zeroa signup please.';
+  // What the prospect sends. Zeroa_WhatsApp_Sales_Inbox finds the referral
+  // code inside the LINK, not in this sentence, so the wording is free to
+  // change. Two rules hold whatever it says: no other web address may
+  // appear before the referral link, or the bot stores and echoes that one
+  // instead, and a longer sentence pushes the QR to a higher version,
+  // which the card compensates for by asking to be printed wider.
+  var PREFIX  = 'I would like to know more about Zeroa.';
 
   var STORE_KEY = 'zeroa-qr-v2';
   var ENTITY    = 'ChemBridge Capital (Pty) Ltd t/a Zeroa';
