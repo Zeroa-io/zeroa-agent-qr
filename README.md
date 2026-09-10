@@ -3,7 +3,7 @@
 A single static page. A Zeroa agent pastes their referral link and gets a QR card that opens
 WhatsApp to the Zeroa business number with the message already written.
 
-Live page: https://booysenmarkus.github.io/zeroa-agent-qr/
+Live page: https://zeroa-io.github.io/zeroa-agent-qr/
 
 ## What the QR encodes
 
