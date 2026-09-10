@@ -48,7 +48,7 @@
   header{
     position:relative;
     overflow:hidden;
-    background:linear-gradient(135deg,#0B4F53 0%,#0F7C82 62%,#138085 100%);
+    background:linear-gradient(135deg,#0B4F53 0%,#0F7C82 100%);
     color:#fff;
     padding:26px 22px 30px;
     border-radius:0 0 26px 26px;
@@ -67,7 +67,7 @@
   header .inner{position:relative;max-width:520px;margin:0 auto}
   header .wm{display:block;width:88px;height:auto;margin:0 0 18px}
   header h1{font:600 26px/1.2 var(--sans);letter-spacing:-.022em;margin:0 0 8px;max-width:19ch}
-  header p{margin:0;font-size:14px;line-height:1.5;opacity:.85;max-width:40ch}
+  header p{margin:0;font-size:14px;line-height:1.5;color:#fff;max-width:40ch}
 
   main{padding:24px 22px 40px;max-width:520px;margin:0 auto}
 
@@ -306,8 +306,8 @@
   //
   // business: the QR points at the Zeroa number and carries the agent's
   //   referral link, so the scan becomes a Lead credited to them.
-  // personal: the QR points at the agent's OWN number and carries no
-  //   message at all. Nothing reaches the CRM. It is a contact card.
+  // personal: the QR points at the agent's OWN number and carries a short
+  //   hello. Nothing reaches the CRM. It is a contact card.
   //
   // The business target is a constant and is never read from the number
   // field. That was the defect in the old page, where every QR pointed at
@@ -417,6 +417,26 @@
     if(d.charAt(0) === '0'){
       return { ok:false, level:'bad', html:'That is the local form, starting with a 0. Swap the 0 for your country code, so 082 123 4567 becomes <b>27</b> 82 123 4567. Malawi is 265 and Zimbabwe is 263.' };
     }
+    // A bracketed zero is a local dialling digit. It is wrong in an
+    // international number in every country, so this one is unconditional.
+    if(/\(\s*0\s*\)/.test(raw)){
+      return { ok:false, level:'bad', html:'Take out the <b>(0)</b>. That digit is only for dialling inside the country, and WhatsApp will not find the number with it in.' };
+    }
+    // And the same zero without the brackets, for the four countries the
+    // hint above names. Narrow on purpose: a few countries do keep a zero
+    // after their code, and this page gates nobody by country.
+    var TRUNK = { '27':'South African', '44':'UK', '263':'Zimbabwean', '265':'Malawian' };
+    var cc = '';
+    for(var ci = 3; ci >= 1; ci--){
+      if(TRUNK[d.substring(0, ci)]){ cc = d.substring(0, ci); break; }
+    }
+    if(cc !== '' && d.charAt(cc.length) === '0'){
+      return { ok:false, level:'bad',
+        html:'Drop the <b>0</b> straight after the ' + cc + '. ' + TRUNK[cc] +
+             ' numbers lose it once the country code is on, so ' + cc + ' 0' +
+             d.substring(cc.length + 1, cc.length + 3) + '... becomes <b>' + cc + ' ' +
+             d.substring(cc.length + 1, cc.length + 3) + '</b>...' };
+    }
     if(d.length < 8){
       return { ok:false, level:'bad', html:'That is only ' + d.length + ' digits. A full number with its country code in front is at least 8.' };
     }
@@ -446,7 +466,7 @@
     // "Https://" is read by neither, and saying so plainly beats letting
     // it fall through to a message about length.
     if(raw.indexOf('://') === -1 || raw.indexOf('http') !== 0){
-      return { ok:false, level:'bad', html:'That has to start with <b>https://</b> in lower case, and nothing before it. That is the only shape WhatsApp and the CRM both read.' };
+      return { ok:false, level:'bad', html:'That has to start with <b>https://</b> in lower case, with nothing in front of it. That is the shape WhatsApp and the CRM both read.' };
     }
     if(raw.length > 249){
       return { ok:false, level:'bad', html:'That link is too long for the CRM to store, at ' + raw.length + ' characters. The limit is 249.' };
@@ -479,9 +499,9 @@
     return PREFIX + ' ' + link.value.replace(/^\s+|\s+$/g, '');
   }
 
-  // Business always goes to the constant. Personal carries no message, so
-  // the scanner opens an empty chat and writes what they like, and the QR
-  // stays short enough to scan from across a room.
+  // Business always goes to the constant. Personal goes to the agent's own
+  // number with the hello attached, so the scanner presses send without
+  // thinking of an opener.
   function targetUrl(v){
     if(isBiz()) return 'https://wa.me/' + TARGET + '?text=' + encodeURIComponent(body());
     return 'https://wa.me/' + v.digits + '?text=' + encodeURIComponent(personalMsg());
